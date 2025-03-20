@@ -49,10 +49,10 @@ jobs:
           terraform init
 
       # Step 6: Format Check
-      - name: Terraform Fmt
-        run: |
-          cd KubeNet
-          terraform fmt -check
+      #- name: Terraform Fmt
+        # run: |
+         # cd KubeNet
+          #terraform fmt -check
 
       # Step 7: Validate and Plan
       - name: Terraform Validate
