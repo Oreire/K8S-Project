@@ -48,13 +48,7 @@ jobs:
           cd KubeNet
           terraform init
 
-      # Step 6: Format Check
-      #- name: Terraform Fmt
-        # run: |
-         # cd KubeNet
-          #terraform fmt -check
-
-      # Step 7: Validate and Plan
+      # Step 4: Validate and Plan
       - name: Terraform Validate
         run: |
           cd KubeNet
@@ -63,11 +57,11 @@ jobs:
       - name: Terraform Plan
         run: |
           cd KubeNet
-          terraform plan -out=tfplan
+          terraform plan -out=kubeplan
 
       # Step 8: Apply Terraform Plan (only on pushes to main)
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
         run: |
           cd KubeNet
-          terraform apply -auto-approve tfplan
+          terraform apply -auto-approve kubeplan
