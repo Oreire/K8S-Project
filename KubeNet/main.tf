@@ -5,32 +5,52 @@ provider "aws" {
 # VPC Definition
 resource "aws_vpc" "clust-net" {
   cidr_block = "192.168.0.0/16"
+  enable_dns_support = true
+  enable_dns_hostnames = true
   tags = {
     Name = "KubeNet"
   }
 }
 
 # Public Subnets
-resource "aws_subnet" "public" {
-  count = 2
+resource "aws_subnet" "public-1" {
   vpc_id = aws_vpc.clust-net.id
-  cidr_block = cidrsubnet(aws_vpc.clust-net.cidr_block, 8, count.index)
+  cidr_block = "192.168.1.0/24"
   map_public_ip_on_launch = true
-  availability_zone = element(data.aws_availability_zones.available.names, count.index)
+  availability_zone = "eu-west-1a"
   tags = {
-    Name = "pubsubnet-${count.index + 1}"
+    Name = "pubsubnet-1"
+  }
+}
+
+resource "aws_subnet" "public-2" {
+  vpc_id = aws_vpc.clust-net.id
+  cidr_block = "192.168.2.0/24"
+  map_public_ip_on_launch = true
+  availability_zone = "eu-west-1b"
+  tags = {
+    Name = "pubsubnet-2"
   }
 }
 
 # Private Subnets
-resource "aws_subnet" "private" {
-  count = 2
+resource "aws_subnet" "private-1" {
   vpc_id = aws_vpc.clust-net.id
-  cidr_block = cidrsubnet(aws_vpc.clust-net.cidr_block, 8, count.index + 2)
+  cidr_block = "192.168.3.0/24"
   map_public_ip_on_launch = false
-  availability_zone = element(data.aws_availability_zones.available.names, count.index)
+  availability_zone = "eu-west-2a"
   tags = {
-    Name = "prisubnet-${count.index + 1}"
+    Name = "prisubnet-1"
+  }
+}
+
+resource "aws_subnet" "public-2" {
+  vpc_id = aws_vpc.clust-net.id
+  cidr_block = "192.168.4.0/24"
+  map_public_ip_on_launch = false
+  availability_zone = "eu-west-2b"
+  tags = {
+    Name = "prisubnet-2"
   }
 }
 
@@ -56,11 +76,14 @@ resource "aws_route_table" "public" {
 
 # Associate Public Subnets with the Public Route Table
 resource "aws_route_table_association" "public" {
-  count = 2
-  subnet_id = element(aws_subnet.public.*.id, count.index)
+  subnet_id = aws_subnet.public-1.id
   route_table_id = aws_route_table.public.id
 }
 
+resource "aws_route_table_association" "public-2" {
+  subnet_id = aws_subnet.public-2.id
+  route_table_id = aws_route_table.public.id
+}
 # Security Groups
 # Security Group for Kubernetes Nodes
 resource "aws_security_group" "k8s_nodes" {
