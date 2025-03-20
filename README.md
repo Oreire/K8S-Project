@@ -1,5 +1,5 @@
 # K8S-Project
-GitHub Acftions Pipeline
+GitHub Actions Pipeline
 
 name: Deploy Kubernetes Resources
 
