@@ -1,0 +1,47 @@
+name: Terraform Infrastructure Provisioning
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  terraform:
+    name: Terraform Provisioning
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.4.6 # Replace with the required Terraform version
+
+      # Step 3: Initialize Terraform Backend
+      - name: Terraform Init
+        run:  |
+           cd KubeNet
+           terraform init
+
+      # Step 4: Validate and Plan
+      - name: Terraform Validate
+        run: |
+           cd KubeNet
+           terraform validate
+
+      - name: Terraform Plan
+        run: |
+          cd KubeNet 
+          terraform plan -out=tfplan
+
+      # Step 5: Apply Terraform Plan (only on pushes to main)
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cd KubeNet
+          terraform apply -auto-approve tfplan

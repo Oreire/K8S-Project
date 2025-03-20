@@ -20,7 +20,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: eu-west-2
 
       - name: Install eksctl
         run: |
@@ -31,11 +31,15 @@ jobs:
         run: |
           eksctl create cluster 
             --name laredo-cluster 
-            --region eu-west-2 
+            --region eu-west-2
+            --vpc-id aws_vpc.clust-net.id
+            --vpc-private-subnets <prisubnet-1>,<prisubnet-2> 
+            --vpc-public-subnets= <pubsubnet-1>,<pubsubnet-2>  
             --nodegroup-name my-kube-nodes
             --node-type t2.micro
             --nodes 3
-          
+
+                             
       - name: Configure kubectl for the cluster
         run: aws eks update-kubeconfig --region eu-west-2 --name laredo-cluster
 
