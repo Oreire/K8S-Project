@@ -1,23 +1,92 @@
 pipeline {
     agent any
+
     environment {
-        KUBECONFIG = '/path/to/kubeconfig'
+        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        AWS_REGION = 'eu-west-2'
     }
+
     stages {
-        stage('Clone Repository') {
+        stage('Setup EKS Cluster') {
             steps {
-                git 'xxxxxxxxxxx'
-            }
-        }
-        stage('Deploy Kubernetes Resources') {
-            steps {
+                // Step 1: Checkout repository
+                checkout scm
+
+                // Step 2: Cache eksctl Binary (Using custom cache logic)
+                script {
+                    if (fileExists('/usr/local/bin/eksctl')) {
+                        echo 'Using cached eksctl binary'
+                    } else {
+                        sh '''
+                        curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/v0.149.0/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+                        sudo mv /tmp/eksctl /usr/local/bin
+                        '''
+                    }
+                }
+
+                // Step 3: Set up AWS CLI
                 sh '''
-                cd Deploy
-                kubectl apply -f nginx-dep-setup.yml 
-                kubectl apply -f prom-dep-setup.yml
-                kubectl apply -f node-exporter.yml
+                aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+                aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+                aws configure set region ${AWS_REGION}
+                '''
+
+                // Step 4: Create EKS Cluster
+                sh '''
+                eksctl create cluster \
+                    --name laredo-cluster \
+                    --region ${AWS_REGION} \
+                    --vpc-id "vpc-08a17b6e2ca297b74" \
+                    --vpc-private-subnets "subnet-02bde47502fb02125,subnet-0f59c570adae02aea" \
+                    --vpc-public-subnets "subnet-083c61532e8a7d397,subnet-04555ba84be05c2ba" \
+                    --nodegroup-name my-kube-nodes \
+                    --node-type t2.micro \
+                    --nodes 3
+                '''
+
+                // Step 5: Configure kubectl for the cluster
+                sh '''
+                aws eks update-kubeconfig --region ${AWS_REGION} --name laredo-cluster
+                '''
+
+                // Step 6: Validate EKS Cluster
+                sh '''
+                eksctl get cluster --region ${AWS_REGION}
                 '''
             }
+        }
+
+        stage('Deploy Kubernetes Resources') {
+            steps {
+                // Step 1: Checkout repository
+                checkout scm
+
+                // Step 2: Apply Nginx Deployment and Service
+                sh '''
+                kubectl apply -f Deploy/nginx-deploy.yml
+                kubectl apply -f Deploy/nginx-service.yml
+                '''
+
+                // Step 3: Apply Prometheus Deployment and Service
+                sh '''
+                kubectl apply -f Deploy/prom-deploy.yml
+                kubectl apply -f Deploy/prom-service.yml
+                '''
+
+                // Step 4: Apply Prometheus Node Exporter DaemonSet and Service
+                sh '''
+                kubectl apply -f Deploy/node-exporter-deploy.yml
+                kubectl apply -f Deploy/node-exporter-svc.yml
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Cleaning up...'
+            cleanWs()
         }
     }
 }
