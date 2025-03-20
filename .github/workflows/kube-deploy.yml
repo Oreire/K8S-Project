@@ -1,0 +1,106 @@
+name: Deploy Kubernetes Resources
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  setup-cluster:
+    name: Setup EKS Cluster
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: eu-west-2
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Cache eksctl Binary
+      - name: Cache eksctl Binary
+        uses: actions/cache@v3
+        with:
+          path: /usr/local/bin/eksctl
+          key: eksctl-cache-${{ runner.os }}
+          restore-keys: |
+            eksctl-cache-${{ runner.os }}
+
+      # Step 3: Set up AWS CLI
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-cli@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Step 4: Install eksctl
+      - name: Install eksctl
+        run: |
+          curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/v0.149.0/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+          sudo mv /tmp/eksctl /usr/local/bin
+
+      # Step 5: Create EKS Cluster
+      - name: Create EKS cluster
+        run: |
+          set -e
+          eksctl create cluster
+            --name laredo-cluster
+            --region eu-west-2
+            --vpc-id "vpc-08a17b6e2ca297b74" 
+            --vpc-private-subnets "subnet-02bde47502fb02125","subnet-0f59c570adae02aea"
+            --vpc-public-subnets "subnet-083c61532e8a7d397","subnet-04555ba84be05c2ba" 
+            --nodegroup-name my-kube-nodes 
+            --node-type t2.micro 
+            --nodes 3
+
+      # Step 6: Configure kubectl for the cluster
+      - name: Configure kubectl
+        run: |
+          set -e
+          aws eks update-kubeconfig --region $AWS_REGION --name laredo-cluster
+
+      # Step 7: Validate Cluster
+      - name: Validate EKS cluster
+        run: |
+          eksctl get cluster --region $AWS_REGION
+
+  deploy-resources:
+    name: Deploy Kubernetes Resources
+    needs: setup-cluster
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: eu-west-2
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Apply Nginx Deployment and Service
+      - name: Apply Nginx Deployment and Service
+        run: |
+          set -e
+          cd Deploy
+          kubectl apply -f nginx-deploy.yml
+          kubectl apply -f nginx-service.yml
+
+      # Step 3: Apply Prometheus Deployment and Service
+      - name: Apply Prometheus Deployment and Service
+        run: |
+          set -e
+          cd Deploy
+          kubectl apply -f prom-deploy.yml
+          kubectl apply -f prom-service.yml
+
+      # Step 4: Apply Prometheus Node Exporter DaemonSet and Service
+      - name: Apply Prometheus Node Exporter DaemonSet and Service
+        run: |
+          set -e
+          cd Deploy
+          kubectl apply -f node-exporter-deploy.yml
+          kubectl apply -f node-exporter-svc.yml
