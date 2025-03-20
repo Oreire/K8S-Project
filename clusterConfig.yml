@@ -1,0 +1,25 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: laredo-cluster
+  region: eu-west-2
+
+vpc:
+  id: "vpc-08a17b6e2ca297b74"
+  subnets:
+    private:
+      private-subnet-1:
+        id: "subnet-02bde47502fb02125"
+      private-subnet-2:
+        id: "subnet-0f59c570adae02aea"
+    public:
+      public-subnet-1:
+        id: "subnet-083c61532e8a7d397"
+      public-subnet-2:
+        id: "subnet-04555ba84be05c2ba"
+
+nodeGroups:
+  - name: my-kube-nodes
+    instanceType: t2.micro
+    desiredCapacity: 3
