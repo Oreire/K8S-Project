@@ -17,7 +17,7 @@ resource "aws_subnet" "public-1" {
   vpc_id = aws_vpc.clust-net.id
   cidr_block = "192.168.1.0/24"
   map_public_ip_on_launch = true
-  availability_zone = "eu-west-1a"
+  availability_zone = "eu-west-2a"
   tags = {
     Name = "pubsubnet-1"
   }
@@ -27,7 +27,7 @@ resource "aws_subnet" "public-2" {
   vpc_id = aws_vpc.clust-net.id
   cidr_block = "192.168.2.0/24"
   map_public_ip_on_launch = true
-  availability_zone = "eu-west-1b"
+  availability_zone = "eu-west-2b"
   tags = {
     Name = "pubsubnet-2"
   }
