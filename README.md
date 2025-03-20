@@ -54,10 +54,12 @@ jobs:
 
       - name: Apply Prometheus Deployment and Service
         run: |
+          cd Deploy
           kubectl apply -f prom-deploy.yml
           kubectl apply -f prom-service.yml
 
       - name: Apply Prometheus Node Exporter DaemonSet and Service
         run: |
+          cd Deploy
           kubectl apply -f node-exporter-deploy.yml
           kubectl apply -f node-exporter-svc.yml
