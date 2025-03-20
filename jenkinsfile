@@ -1,0 +1,23 @@
+pipeline {
+    agent any
+    environment {
+        KUBECONFIG = '/path/to/kubeconfig'
+    }
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git 'xxxxxxxxxxx'
+            }
+        }
+        stage('Deploy Kubernetes Resources') {
+            steps {
+                sh '''
+                cd Deploy
+                kubectl apply -f nginx-dep-setup.yml
+                kubectl apply -f prom-dep-setup.yml
+                kubectl apply -f node-exporter.yml
+                '''
+            }
+        }
+    }
+}
