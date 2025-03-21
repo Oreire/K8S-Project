@@ -4,7 +4,7 @@ kind: ClusterConfig
 metadata:
   name: laredo-cluster          # Cluster name
   region: eu-west-2             # AWS region
-  version: "1.23"               # Kubernetes version
+  version: "1.22"               # Kubernetes version
 
 vpc:
   id: vpc-08a17b6e2ca297b74     # VPC ID
