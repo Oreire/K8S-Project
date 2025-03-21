@@ -48,14 +48,19 @@ jobs:
         run: |
           set -e
           eksctl create cluster -f clusterConfig.yml
+      # Step 6: Cleanup on Failure
+      - name: Cleanup Failed Cluster
+        if: failure() # Only run if the previous steps failed
+        run: |
+          eksctl delete cluster --region=eu-west-2 --name=laredo-cluster
 
-      # Step 6: Configure kubectl for the cluster
+      # Step 7: Configure kubectl for the cluster
       - name: Configure kubectl
         run: |
           set -e
           aws eks update-kubeconfig --region $AWS_REGION --name laredo-cluster
 
-      # Step 7: Validate Cluster
+      # Step 8: Validate Cluster
       - name: Validate EKS cluster
         run: |
           eksctl get cluster --region $AWS_REGION
