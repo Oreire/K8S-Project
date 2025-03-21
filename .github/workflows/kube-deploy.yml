@@ -47,15 +47,7 @@ jobs:
       - name: Create EKS cluster
         run: |
           set -e
-          eksctl create cluster \
-            --name laredo-cluster \
-            --region eu-west-2 \
-            --vpc-id "vpc-08a17b6e2ca297b74" \
-            --vpc-private-subnets "subnet-02bde47502fb02125","subnet-0f59c570adae02aea" \
-            --vpc-public-subnets "subnet-083c61532e8a7d397","subnet-04555ba84be05c2ba" \
-            --nodegroup-name my-kube-nodes \
-            --node-type t2.micro \
-            --nodes 3
+          eksctl create cluster -f clusterConfig.yml
 
       # Step 6: Configure kubectl for the cluster
       - name: Configure kubectl
