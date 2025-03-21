@@ -25,7 +25,7 @@ pipeline {
                     }
                 }
 
-                // Step 3: Set up AWS CLI
+                // Step 3: Set up AWS CLI for Access
                 sh '''
                 aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
                 aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
