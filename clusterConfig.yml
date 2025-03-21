@@ -2,24 +2,29 @@ apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
-  name: laredo-cluster
-  region: eu-west-2
+  name: laredo-cluster          # Cluster name
+  region: eu-west-2             # AWS region
+  version: "1.32"               # Kubernetes version
 
 vpc:
-  id: "vpc-08a17b6e2ca297b74"
+  id: vpc-08a17b6e2ca297b74     # VPC ID
   subnets:
     private:
       private-subnet-1:
-        id: "subnet-02bde47502fb02125"
+        id: subnet-0f59c570adae02aea   # Private Subnet ID 1
       private-subnet-2:
-        id: "subnet-0f59c570adae02aea"
+        id: subnet-02bde47502fb02125  # Private Subnet ID 2
     public:
       public-subnet-1:
-        id: "subnet-083c61532e8a7d397"
+        id: subnet-083c61532e8a7d397  # Public Subnet ID 1
       public-subnet-2:
-        id: "subnet-04555ba84be05c2ba"
+        id: subnet-04555ba84be05c2ba  # Public Subnet ID 2
 
 nodeGroups:
-  - name: my-kube-nodes
-    instanceType: t2.micro
-    desiredCapacity: 3
+  - name: my-kube-nodes          # Node group name
+    instanceType: t2.micro       # Instance type
+    desiredCapacity: 3           # Desired number of nodes
+    minSize: 1                   # Minimum number of nodes
+    maxSize: 5                   # Maximum number of nodes
+    privateNetworking: true      # Nodes use private networking
+    volumeSize: 20               # Volume size in GB
