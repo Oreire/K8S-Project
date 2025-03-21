@@ -1,5 +1,5 @@
 # K8S-Project
-# Created Kube-Cluster-policy (IAM)
+# Created Kube-Cluster-policy and CloudFormation-policies (IAM)
 GitHub Actions Pipeline
 
 name: Deploy Kubernetes Resources
