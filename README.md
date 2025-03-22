@@ -1,5 +1,6 @@
 # K8S-Project
 # Created Kube-Cluster-policy, CloudFormation-policies && EC2-DESCRIBE-VPC (IAM)
+# Updates to the localhost K8S cluster
 GitHub Actions Pipeline
 
 name: Terraform Infrastructure Provisioning
