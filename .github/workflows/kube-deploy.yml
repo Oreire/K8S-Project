@@ -58,7 +58,8 @@ jobs:
       - name: Configure kubectl
         run: |
           set -e
-          aws eks update-kubeconfig --region $AWS_REGION --name Pro8-cluster
+          aws eks update-kubeconfig --region eu-west-2 --name Pro8-cluster
+
 
       # Step 8: Validate Cluster
       - name: Validate EKS cluster
