@@ -87,7 +87,7 @@ jobs:
           cd Deploy
           kubectl apply -f nginx-deploy.yml
           kubectl apply -f nginx-service.yml
-
+          
       # Step 3: Apply Prometheus Deployment and Service
       - name: Apply Prometheus Deployment and Service
         run: |
