@@ -29,32 +29,3 @@ nodeGroups:
     #privateNetworking: true      # Nodes use private networking
     #volumeSize: 20               # Volume size in GB
 
-apiVersion: eksctl.io/v1alpha5
-kind: ClusterConfig
-
-metadata:
-  name: Pro8-cluster
-  region: eu-west-2
-  version: "1.25"  # Specify Kubernetes version
-
-vpc:
-  cidr: "192.168.0.0/16"
-  subnets:
-    private:
-      eu-west-2a:
-        cidr: "192.168.1.0/24"
-      eu-west-2b:
-        cidr: "192.168.2.0/24"
-    public:
-      eu-west-2a:
-        cidr: "192.168.3.0/24"
-      eu-west-2b:
-        cidr: "192.168.4.0/24"
-
-nodeGroups:
-  - name: my-kube-nodes
-    instanceType: t2.micro
-    desiredCapacity: 3
-    minSize: 3
-    maxSize: 5
-    privateNetworking: true  # Ensures nodes are created in private subnets
