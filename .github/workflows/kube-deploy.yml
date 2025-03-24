@@ -16,20 +16,9 @@ jobs:
       AWS_REGION: eu-west-2
       
     steps:
-      # Step 1: Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Cache eksctl Binary
-      - name: Cache eksctl Binary
-        uses: actions/cache@v3
-        with:
-          path: /usr/local/bin/eksctl
-          key: eksctl-cache-${{ runner.os }}
-          restore-keys: |
-            eksctl-cache-${{ runner.os }}
-
-      # Step 3: Set up AWS CLI
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -37,38 +26,34 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # Step 4: Install eksctl
       - name: Install eksctl
         run: |
           curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/v0.149.0/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
           sudo mv /tmp/eksctl /usr/local/bin
 
-      # Step 5: Create EKS Cluster
       - name: Create EKS cluster
         run: |
           set -e
           eksctl create cluster -f clusterConfig.yml
-      # Step 6: Cleanup on Failure
+
       - name: Cleanup Failed Cluster
         if: failure() # Only run if the previous steps failed
         run: |
-          eksctl delete cluster --region=eu-west-2 --name=Pro8-cluster
+          eksctl delete cluster --region=${{ env.AWS_REGION }} --name=Pro8-cluster
 
-      # Step 7: Configure kubectl for the cluster
       - name: Create kubeconfig
         run: |
           echo "${{ secrets.KUBECONFIG_CONTENT }}" > ~/.kube/config
           chmod 600 ~/.kube/config
+
       - name: Configure kubectl
         run: |
           set -e
-          aws eks update-kubeconfig --region eu-west-2 --name Pro8-cluster
-          
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name Pro8-cluster
 
-      # Step 8: Validate Cluster
       - name: Validate EKS cluster
         run: |
-          eksctl get cluster --region $AWS_REGION
+          eksctl get cluster --region ${{ env.AWS_REGION }}
 
   deploy-resources:
     name: Deploy Kubernetes Resources
@@ -79,33 +64,28 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: eu-west-2
-
+    
     steps:
-      # Step 1: Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Apply Nginx Deployment and Service
       - name: Apply Nginx Deployment and Service
         run: |
           set -e
           cd Deploy
-          kubectl apply -f nginx-deploy.yml --validate=false
-          kubectl apply -f nginx-service.yml --validate=false
+          kubectl apply -f nginx-deploy.yml 
+          kubectl apply -f nginx-service.yml
           
-      # Step 3: Apply Prometheus Deployment and Service
       - name: Apply Prometheus Deployment and Service
         run: |
           set -e
           cd Deploy
-          kubectl apply -f prom-deploy.yml --validate=false
-          kubectl apply -f prom-service.yml --validate=false
+          kubectl apply -f prom-deploy.yml 
+          kubectl apply -f prom-service.yml 
           
-
-      # Step 4: Apply Prometheus Node Exporter DaemonSet and Service
       - name: Apply Prometheus Node Exporter DaemonSet and Service
         run: |
           set -e
           cd Deploy
-          kubectl apply -f node-exporter-deploy.yml --validate=false
-          kubectl apply -f node-exporter-svc.yml --validate=false
+          kubectl apply -f node-exporter-deploy.yml 
+          kubectl apply -f node-exporter-svc.yml 
