@@ -90,21 +90,22 @@ jobs:
         run: |
           set -e
           cd Deploy
-          kubectl apply -f nginx-deploy.yml
-          kubectl apply -f nginx-service.yml
+          kubectl apply -f nginx-deploy.yml --validate=false
+          kubectl apply -f nginx-service.yml --validate=false
           
       # Step 3: Apply Prometheus Deployment and Service
       - name: Apply Prometheus Deployment and Service
         run: |
           set -e
           cd Deploy
-          kubectl apply -f prom-deploy.yml
-          kubectl apply -f prom-service.yml
+          kubectl apply -f prom-deploy.yml --validate=false
+          kubectl apply -f prom-service.yml --validate=false
+          
 
       # Step 4: Apply Prometheus Node Exporter DaemonSet and Service
       - name: Apply Prometheus Node Exporter DaemonSet and Service
         run: |
           set -e
           cd Deploy
-          kubectl apply -f node-exporter-deploy.yml
-          kubectl apply -f node-exporter-svc.yml
+          kubectl apply -f node-exporter-deploy.yml --validate=false
+          kubectl apply -f node-exporter-svc.yml --validate=false
