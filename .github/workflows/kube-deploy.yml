@@ -55,11 +55,15 @@ jobs:
           eksctl delete cluster --region=eu-west-2 --name=Pro8-cluster
 
       # Step 7: Configure kubectl for the cluster
+      - name: Create kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONFIG_CONTENT }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
       - name: Configure kubectl
         run: |
           set -e
           aws eks update-kubeconfig --region eu-west-2 --name Pro8-cluster
-
+          
 
       # Step 8: Validate Cluster
       - name: Validate EKS cluster
