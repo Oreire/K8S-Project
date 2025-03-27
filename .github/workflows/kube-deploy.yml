@@ -54,7 +54,8 @@ jobs:
       - name: Validate EKS cluster
         run: |
           eksctl get cluster --region ${{ env.AWS_REGION }}
-
+          kubectl get nodes
+        
   deploy-resources:
     name: Deploy Kubernetes Resources
     needs: setup-cluster
@@ -68,7 +69,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
+ 
+      - name: Validate Kubernetes YAML Files
+        run: |
+          cd Deploy
+          kubectl apply --dry-run=client -f nginx-deploy.yml
+          kubectl apply --dry-run=client -f nginx-service.yml
+          kubectl apply --dry-run=client -f prom-deploy.yml
+          kubectl apply --dry-run=client -f prom-service.yml
+          kubectl apply --dry-run=client -f node-exporter-deploy.yml
+          kubectl apply --dry-run=client -f node-exporter-svc.yml
+  
       - name: Apply Nginx Deployment and Service
         run: |
           set -e
