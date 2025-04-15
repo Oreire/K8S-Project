@@ -1,13 +1,15 @@
-# Description: This file is used to deploy the prometheus deployment and service in the kubernetes cluster.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prometheus-deployment
+  namespace: monitoring # Specify the namespace
+labels:
+  app: prometheus
 spec:
-  replicas: 1
+  replicas: 1 # Number of pod replicas
   selector:
     matchLabels:
-      app: prometheus
+      app: prometheus # Ensure selector matches pod labels
   template:
     metadata:
       labels:
@@ -21,8 +23,26 @@ spec:
         volumeMounts:
         - name: prometheus-config
           mountPath: /etc/prometheus
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 9090
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 9090
+          initialDelaySeconds: 10
+          periodSeconds: 15
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "1"
+            memory: "1Gi"
       volumes:
       - name: prometheus-config
         configMap:
-          name: prometheus-config
-
+          name: prometheus-config # Ensure the ConfigMap exists
