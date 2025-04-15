@@ -2,7 +2,7 @@ apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
-  name: Pro8-cluster          # Cluster name
+  name: Pro88-cluster          # Cluster name
   region: eu-west-2             # AWS region
   version: "1.27"               # Kubernetes version
 
@@ -21,7 +21,7 @@ vpc:
         id: subnet-04555ba84be05c2ba  # Public Subnet ID 2
 
 nodeGroups:
-  - name: my-cube-nodes          # Node group name
+  - name: my-kub-nodes          # Node group name
     instanceType: t2.micro       # Instance type
     desiredCapacity: 3           # Desired number of nodes
     minSize: 3                  # Minimum number of nodes
