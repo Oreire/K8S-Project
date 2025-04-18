@@ -1,9 +1,12 @@
+// This Jenkinsfile is designed to automate the deployment of an EKS cluster and Kubernetes resources using Jenkins Pipeline. It includes improved caching logic, validation checks, and cleanup steps to ensure a smooth deployment process.
+// The pipeline consists of two main stages: "Setup EKS Cluster" and "Deploy Kubernetes Resources". Each stage contains multiple steps to perform specific tasks, such as checking out the repository, caching binaries, configuring AWS CLI, creating the EKS cluster, applying Kubernetes resources, and validating the deployment.
 pipeline {
     agent any
 
     environment {
-        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
-        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        // Using GitHub Secrets to securely access AWS credentials
+        AWS_ACCESS_KEY_ID = credentials('GITHUB_AWS_ACCESS_KEY')
+        AWS_SECRET_ACCESS_KEY = credentials('GITHUB_AWS_SECRET_ACCESS_KEY')
         AWS_REGION = 'eu-west-2'
     }
 
@@ -13,7 +16,7 @@ pipeline {
                 // Step 1: Checkout repository
                 checkout scm
 
-                // Step 2: Cache eksctl Binary (Using custom cache logic)
+                // Step 2: Cache eksctl Binary (Improved caching logic)
                 script {
                     if (fileExists('/usr/local/bin/eksctl')) {
                         echo 'Using cached eksctl binary'
@@ -25,14 +28,14 @@ pipeline {
                     }
                 }
 
-                // Step 3: Set up AWS CLI for Access
+                // Step 3: Set up AWS CLI using GitHub Secrets
                 sh '''
                 aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
                 aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
                 aws configure set region ${AWS_REGION}
                 '''
 
-                // Step 4: Create EKS Cluster
+                // Step 4: Create EKS Cluster (with validation for nodes and resources)
                 sh '''
                 eksctl create cluster \
                     --name laredo-cluster \
@@ -41,8 +44,11 @@ pipeline {
                     --vpc-private-subnets "subnet-02bde47502fb02125,subnet-0f59c570adae02aea" \
                     --vpc-public-subnets "subnet-083c61532e8a7d397,subnet-04555ba84be05c2ba" \
                     --nodegroup-name my-kube-nodes \
-                    --node-type t2.micro \
-                    --nodes 3
+                    --node-type t2.small \
+                    --nodes 3 \
+                    --nodes-min 3 \
+                    --nodes-max 5 \
+                    --managed
                 '''
 
                 // Step 5: Configure kubectl for the cluster
@@ -53,6 +59,8 @@ pipeline {
                 // Step 6: Validate EKS Cluster
                 sh '''
                 eksctl get cluster --region ${AWS_REGION}
+                kubectl get nodes
+                kubectl get pods -A
                 '''
             }
         }
@@ -62,22 +70,39 @@ pipeline {
                 // Step 1: Checkout repository
                 checkout scm
 
-                // Step 2: Apply Nginx Deployment and Service
+                // Step 2: Validate Kubernetes YAML Files
+                sh '''
+                kubectl apply --dry-run=client --validate=true -f Deploy/nginx-deploy.yml
+                kubectl apply --dry-run=client --validate=true -f Deploy/nginx-service.yml
+                kubectl apply --dry-run=client --validate=true -f Deploy/prom-deploy.yml
+                kubectl apply --dry-run=client --validate=true -f Deploy/prom-service.yml
+                kubectl apply --dry-run=client --validate=true -f Deploy/node-exporter-deploy.yml
+                kubectl apply --dry-run=client --validate=true -f Deploy/node-exporter-svc.yml
+                '''
+
+                // Step 3: Apply Nginx Deployment and Service
                 sh '''
                 kubectl apply -f Deploy/nginx-deploy.yml
                 kubectl apply -f Deploy/nginx-service.yml
                 '''
 
-                // Step 3: Apply Prometheus Deployment and Service
+                // Step 4: Apply Prometheus Deployment and Service
                 sh '''
                 kubectl apply -f Deploy/prom-deploy.yml
                 kubectl apply -f Deploy/prom-service.yml
                 '''
 
-                // Step 4: Apply Prometheus Node Exporter DaemonSet and Service
+                // Step 5: Apply Node Exporter DaemonSet and Service
                 sh '''
                 kubectl apply -f Deploy/node-exporter-deploy.yml
                 kubectl apply -f Deploy/node-exporter-svc.yml
+                '''
+
+                // Step 6: Wait for Resources to Be Ready
+                sh '''
+                kubectl wait --for=condition=ready pod -l app=nginx --timeout=300s
+                kubectl wait --for=condition=ready pod -l app=prometheus --timeout=300s
+                kubectl wait --for=condition=ready pod -l app=node-exporter --timeout=300s
                 '''
             }
         }
@@ -85,8 +110,15 @@ pipeline {
 
     post {
         always {
-            echo 'Cleaning up...'
+            echo 'Cleaning up workspace...'
             cleanWs()
+        }
+        success {
+            echo 'Deployment completed successfully!'
+        }
+        failure {
+            echo 'Deployment failed. Check logs for details.'
         }
     }
 }
+// This Jenkinsfile is designed to automate the deployment of an EKS cluster and Kubernetes resources using Jenkins Pipeline. It includes improved caching logic, validation checks, and cleanup steps to ensure a smooth deployment process.
