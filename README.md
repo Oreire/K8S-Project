@@ -1,5 +1,10 @@
 # K8S-Project undertaken at TechBleat
 
+
+Overview:
+Implemented an automated provisioning and deployment pipeline for Kubernetes infrastructure on AWS Elastic Kubernetes Service (EKS) using Terraform and GitHub Actions. The project followed DevOps best practices by integrating Infrastructure as Code (IaC), CI/CD automation, and monitoring to deliver a scalable, resilient, and production‑ready environment. Terraform scripts provisioned clusters and associated resources, while GitHub Actions orchestrated CI/CD workflows for seamless application deployment. Integrated monitoring solutions ensured observability, performance tracking, and fault tolerance. This structured approach reduced manual intervention, improved deployment consistency, and reinforced governance for cloud‑native workloads.
+
+
 # Project Summary:
 
 This project is a hands-on implementation of the automation of the provisioning and deployment of a Kubernetes cluster and its associated resources using  **Terraform**, **GitHub Actions**, and **AWS EKS**. A structured approach was utilized for the infrastructure provisioning and services deployment in line with DevOps best practices.
